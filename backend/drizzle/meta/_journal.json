@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1783958101779,
+      "tag": "0000_nostalgic_mariko_yashida",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783958116965,
+      "tag": "0001_immutabilita_documenti_emessi",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783958620539,
+      "tag": "0002_auth_refresh_rotation",
+      "breakpoints": true
+    }
+  ]
+}

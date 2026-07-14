@@ -1,0 +1,39 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    # nessuna porta esposta verso l'host
+
+  backend:
+    build: ./backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      PORT: 3005
+    restart: unless-stopped
+    # nessuna porta esposta verso l'host
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    env_file: .env
+    ports:
+      - "3004:3000"
+    restart: unless-stopped
+
+volumes:
+  pgdata:

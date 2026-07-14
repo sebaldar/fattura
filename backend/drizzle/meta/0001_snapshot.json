@@ -1,0 +1,637 @@
+{
+  "id": "fca7c110-054d-4190-90ef-345027828238",
+  "prevId": "9f7fccc5-5314-4be8-9c67-f9c553991c33",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.clienti": {
+      "name": "clienti",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "denominazione": {
+          "name": "denominazione",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "partita_iva": {
+          "name": "partita_iva",
+          "type": "varchar(11)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "codice_fiscale": {
+          "name": "codice_fiscale",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "codice_sdi": {
+          "name": "codice_sdi",
+          "type": "varchar(7)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "pec": {
+          "name": "pec",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "indirizzo": {
+          "name": "indirizzo",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cap": {
+          "name": "cap",
+          "type": "varchar(5)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "comune": {
+          "name": "comune",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "provincia": {
+          "name": "provincia",
+          "type": "varchar(2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nazione": {
+          "name": "nazione",
+          "type": "varchar(2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'IT'"
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "telefono": {
+          "name": "telefono",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.contatori": {
+      "name": "contatori",
+      "schema": "",
+      "columns": {
+        "tipo": {
+          "name": "tipo",
+          "type": "tipo_documento",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "anno": {
+          "name": "anno",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ultimo_progressivo": {
+          "name": "ultimo_progressivo",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "contatori_tipo_anno_pk": {
+          "name": "contatori_tipo_anno_pk",
+          "columns": [
+            "tipo",
+            "anno"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.documenti": {
+      "name": "documenti",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "tipo_documento",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "stato": {
+          "name": "stato",
+          "type": "stato_documento",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'bozza'"
+        },
+        "anno": {
+          "name": "anno",
+          "type": "smallint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "progressivo": {
+          "name": "progressivo",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "numero": {
+          "name": "numero",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "cliente_id": {
+          "name": "cliente_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cliente_snapshot": {
+          "name": "cliente_snapshot",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "documento_riferimento_id": {
+          "name": "documento_riferimento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "data_documento": {
+          "name": "data_documento",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "totale_imponibile_cent": {
+          "name": "totale_imponibile_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "totale_iva_cent": {
+          "name": "totale_iva_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "totale_cent": {
+          "name": "totale_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "emessa_at": {
+          "name": "emessa_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "documenti_cliente_id_clienti_id_fk": {
+          "name": "documenti_cliente_id_clienti_id_fk",
+          "tableFrom": "documenti",
+          "columnsFrom": [
+            "cliente_id"
+          ],
+          "tableTo": "clienti",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "documenti_documento_riferimento_id_documenti_id_fk": {
+          "name": "documenti_documento_riferimento_id_documenti_id_fk",
+          "tableFrom": "documenti",
+          "columnsFrom": [
+            "documento_riferimento_id"
+          ],
+          "tableTo": "documenti",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "documenti_tipo_anno_progressivo_key": {
+          "name": "documenti_tipo_anno_progressivo_key",
+          "columns": [
+            "tipo",
+            "anno",
+            "progressivo"
+          ],
+          "nullsNotDistinct": false
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "documenti_numero_coerente_con_stato": {
+          "name": "documenti_numero_coerente_con_stato",
+          "value": "(\"documenti\".\"numero\" is not null) = (\"documenti\".\"stato\" <> 'bozza')"
+        },
+        "documenti_nc_richiede_riferimento": {
+          "name": "documenti_nc_richiede_riferimento",
+          "value": "\"documenti\".\"tipo\" <> 'nota_credito' or \"documenti\".\"documento_riferimento_id\" is not null"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.emittente": {
+      "name": "emittente",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "default": 1
+        },
+        "ragione_sociale": {
+          "name": "ragione_sociale",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "partita_iva": {
+          "name": "partita_iva",
+          "type": "varchar(11)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "codice_fiscale": {
+          "name": "codice_fiscale",
+          "type": "varchar(16)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "indirizzo": {
+          "name": "indirizzo",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cap": {
+          "name": "cap",
+          "type": "varchar(5)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "comune": {
+          "name": "comune",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provincia": {
+          "name": "provincia",
+          "type": "varchar(2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nazione": {
+          "name": "nazione",
+          "type": "varchar(2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'IT'"
+        },
+        "regime_fiscale": {
+          "name": "regime_fiscale",
+          "type": "varchar(4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "iban": {
+          "name": "iban",
+          "type": "varchar(34)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "telefono": {
+          "name": "telefono",
+          "type": "varchar(30)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "emittente_singleton": {
+          "name": "emittente_singleton",
+          "value": "\"emittente\".\"id\" = 1"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.righe_documento": {
+      "name": "righe_documento",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "documento_id": {
+          "name": "documento_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "posizione": {
+          "name": "posizione",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "codice_fornitore": {
+          "name": "codice_fornitore",
+          "type": "varchar(6)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "codice_merce": {
+          "name": "codice_merce",
+          "type": "varchar(15)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "codice_ean": {
+          "name": "codice_ean",
+          "type": "varchar(15)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "descrizione": {
+          "name": "descrizione",
+          "type": "varchar(200)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "codice_iva": {
+          "name": "codice_iva",
+          "type": "char(5)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "aliquota_iva_cent": {
+          "name": "aliquota_iva_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "natura": {
+          "name": "natura",
+          "type": "char(3)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "quantita": {
+          "name": "quantita",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "prezzo_unitario_cent": {
+          "name": "prezzo_unitario_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "totale_riga_cent": {
+          "name": "totale_riga_cent",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "righe_documento_documento_id_documenti_id_fk": {
+          "name": "righe_documento_documento_id_documenti_id_fk",
+          "tableFrom": "righe_documento",
+          "columnsFrom": [
+            "documento_id"
+          ],
+          "tableTo": "documenti",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "righe_documento_quantita_positiva": {
+          "name": "righe_documento_quantita_positiva",
+          "value": "\"righe_documento\".\"quantita\" > 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.utenti": {
+      "name": "utenti",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "totp_secret": {
+          "name": "totp_secret",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "totp_enabled": {
+          "name": "totp_enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "failed_attempts": {
+          "name": "failed_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "locked_until": {
+          "name": "locked_until",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "utenti_email_unique": {
+          "name": "utenti_email_unique",
+          "columns": [
+            "email"
+          ],
+          "nullsNotDistinct": false
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.stato_documento": {
+      "name": "stato_documento",
+      "schema": "public",
+      "values": [
+        "bozza",
+        "emessa",
+        "annullata"
+      ]
+    },
+    "public.tipo_documento": {
+      "name": "tipo_documento",
+      "schema": "public",
+      "values": [
+        "fattura",
+        "nota_credito"
+      ]
+    }
+  },
+  "schemas": {},
+  "views": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

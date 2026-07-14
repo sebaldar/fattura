@@ -1,0 +1,1 @@
+ALTER TABLE "utenti" ADD COLUMN "current_refresh_jti" text;
