@@ -14,6 +14,13 @@ const envSchema = z.object({
   TOTP_ENC_KEY: z.string().min(32),
   ADMIN_EMAIL: z.string().email().optional(),
   ADMIN_PASSWORD: z.string().min(8).optional(),
+  // Solo per l'ambiente demo pubblico (.env.demo): un codice TOTP fisso accettato
+  // in aggiunta a quello reale, per evitare di dover configurare un'app authenticator
+  // per provare la demo. Assente per default: mai impostare in produzione.
+  DEMO_OTP_BYPASS_CODE: z
+    .string()
+    .regex(/^\d{6}$/, "Il codice bypass deve essere di 6 cifre")
+    .optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -50,6 +50,16 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRoutesOptions):
     reply.clearCookie(COOKIE_PENDING, { path: "/" });
   }
 
+  // Solo se DEMO_OTP_BYPASS_CODE è impostata (mai in produzione): accetta quel
+  // codice fisso in aggiunta al TOTP reale, per non richiedere un'app authenticator
+  // per esplorare la demo pubblica.
+  async function isValidTotp(code: string, secret: string): Promise<boolean> {
+    if (env.DEMO_OTP_BYPASS_CODE && code === env.DEMO_OTP_BYPASS_CODE) {
+      return true;
+    }
+    return verifyTotpCode(code, secret);
+  }
+
   async function registerFailedAttempt(userId: string, failedAttempts: number): Promise<void> {
     const nextFailed = failedAttempts + 1;
     await db
@@ -156,7 +166,7 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRoutesOptions):
         return;
       }
 
-      const valid = await verifyTotpCode(body.code, pending.totpSecret);
+      const valid = await isValidTotp(body.code, pending.totpSecret);
       if (!valid) {
         await registerFailedAttempt(user.id, user.failedAttempts);
         reply.code(401).send({ error: "Codice non valido" });
@@ -209,7 +219,7 @@ export async function authRoutes(app: FastifyInstance, opts: AuthRoutesOptions):
       }
 
       const secret = decryptSecret(user.totpSecret, env.TOTP_ENC_KEY);
-      const valid = await verifyTotpCode(body.code, secret);
+      const valid = await isValidTotp(body.code, secret);
       if (!valid) {
         await registerFailedAttempt(user.id, user.failedAttempts);
         reply.code(401).send({ error: "Codice non valido" });
