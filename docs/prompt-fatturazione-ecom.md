@@ -65,7 +65,8 @@ Schema rilevante:
 
 Endpoint backend:
 
-- `GET /api/legacy/merci?ean=<EAN>` → `SELECT m.codice_fornitore, m.codice_merce, m.descrizione, m.prezzo_di_vendita, m.codice_IVA, a.aliquota_iva, a.operazione, a.natura FROM merci m JOIN aliquotaiva a ON a.codice = m.codice_IVA WHERE m.codice_EAN = ?`
+- `GET /api/legacy/merci?ean=<EAN>` → `SELECT m.codice_fornitore, m.codice_merce, m.descrizione, m.prezzo_di_vendita, m.codice_IVA, m.codice_EAN, a.aliquota_iva, a.operazione, a.natura FROM merci m JOIN aliquotaiva a ON a.codice = m.codice_IVA WHERE m.codice_EAN = ?`
+- `GET /api/legacy/merci?fornitore=<codice>&merce=<codice>` → stessa query, `WHERE m.codice_fornitore = ? AND m.codice_merce = ?` (lookup diretto sulla PK, usato dal QR di etichetta).
 - `GET /api/legacy/merci?q=<testo>` → ricerca fallback per codice o descrizione (LIKE, limit 20).
 - `GET /api/legacy/aliquote` → elenco aliquote per la select del form riga (con cache in memoria, TTL 1h).
 
@@ -117,7 +118,7 @@ Pagine:
 - **Dashboard**: ultimi documenti, totali anno corrente.
 - **Clienti**: lista con ricerca, nuovo/modifica con doppia modalità (form manuale | "da foto" con precompilazione AI).
 - **Documenti**: lista con filtri per anno, tipo, stato, cliente; azioni contestuali allo stato (modifica solo su bozze, "crea nota di credito" solo su fatture emesse).
-- **Editor documento**: testata (cliente da ricerca/autocomplete, data) + righe. Aggiunta riga manuale o via **scanner EAN**: `BarcodeDetector` API nativa dove disponibile, fallback `@zxing/browser`; a lettura riuscita, lookup sul legacy e riga precompilata (codici, descrizione, prezzo, codice IVA con aliquota snapshot), tutto editabile prima della conferma. Prezzi digitati in euro, memorizzati in centesimi. Totali e riepilogo IVA live.
+- **Editor documento**: testata (cliente da ricerca/autocomplete, data) + righe, con campi `codice fornitore`/`codice merce`/`codice EAN` sempre editabili manualmente. Aggiunta o modifica riga manuale o via **scanner EAN/QR**: `BarcodeDetector` API nativa dove disponibile (formati `ean_13`, `ean_8`, `qr_code`), fallback `@zxing/browser`; il testo decodificato viene classificato (EAN numerico 8/13 cifre vs QR di etichetta fornitore/merce con URL `?fornitore=...&merce=...`, stessa convenzione di VIEW_PRODUCT) e usato per il lookup corrispondente sul legacy, con riga precompilata (codici, descrizione, prezzo, codice IVA con aliquota snapshot), tutto editabile prima della conferma. Prezzi digitati in euro, memorizzati in centesimi. Totali e riepilogo IVA live.
 - **Impostazioni emittente**: form dei dati dell'emittente.
 - **Dettaglio documento emesso**: vista in sola lettura con pulsanti **Scarica PDF** e **Scarica XML FatturaPA** (visibili solo per stato `emessa`) e azione "Crea nota di credito".
 

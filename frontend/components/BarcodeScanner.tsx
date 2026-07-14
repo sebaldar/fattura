@@ -20,14 +20,19 @@ declare global {
   }
 }
 
-const FORMATI_EAN = ["ean_13", "ean_8"];
+// EAN (etichette prezzo) + QR (etichette fornitore/merce, stessa convenzione di VIEW_PRODUCT).
+const FORMATI_SUPPORTATI = ["ean_13", "ean_8", "qr_code"];
 
 export interface BarcodeScannerProps {
   onDetected: (codice: string) => void;
   onClose: () => void;
 }
 
-/** Scanner EAN: usa BarcodeDetector nativo dove disponibile, altrimenti @zxing/browser. */
+/**
+ * Scanner EAN/QR: usa BarcodeDetector nativo dove disponibile, altrimenti
+ * @zxing/browser (che senza hints espliciti decodifica già entrambi i formati).
+ * Il testo grezzo decodificato va classificato dal chiamante (vedi lib/scanner.ts).
+ */
 export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [errore, setErrore] = useState<string | null>(null);
@@ -46,7 +51,7 @@ export function BarcodeScanner({ onDetected, onClose }: BarcodeScannerProps) {
       if (annullato) return;
       video.srcObject = stream;
       await video.play();
-      const detector = new BarcodeDetectorCtor({ formats: FORMATI_EAN });
+      const detector = new BarcodeDetectorCtor({ formats: FORMATI_SUPPORTATI });
 
       const loop = async () => {
         if (annullato) return;

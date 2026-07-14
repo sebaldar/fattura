@@ -9,6 +9,7 @@ export interface MerceLegacy {
   aliquotaIvaCent: number;
   operazione: "imponibile" | "non imponibile" | "esente";
   natura: string | null;
+  codiceEan: string | null;
   prezzoUnitarioCent: number;
 }
 
@@ -22,6 +23,12 @@ export interface AliquotaLegacy {
 
 export function cercaMerceByEan(ean: string): Promise<MerceLegacy> {
   return api.get<MerceLegacy>(`/api/legacy/merci?ean=${encodeURIComponent(ean)}`);
+}
+
+export function cercaMerceByFornitoreMerce(fornitore: string, merce: string): Promise<MerceLegacy> {
+  return api.get<MerceLegacy>(
+    `/api/legacy/merci?fornitore=${encodeURIComponent(fornitore)}&merce=${encodeURIComponent(merce)}`,
+  );
 }
 
 export function cercaMerceByTesto(q: string): Promise<MerceLegacy[]> {

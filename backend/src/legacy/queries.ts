@@ -13,6 +13,7 @@ export interface MerceLegacy {
   aliquotaIvaCent: number;
   operazione: Operazione;
   natura: string | null;
+  codiceEan: string | null;
 }
 
 interface MerceRow extends RowDataPacket {
@@ -24,6 +25,7 @@ interface MerceRow extends RowDataPacket {
   aliquota_iva: number;
   operazione: Operazione;
   natura: string | null;
+  codice_EAN: string | null;
 }
 
 function mapMerce(row: MerceRow): MerceLegacy {
@@ -36,12 +38,13 @@ function mapMerce(row: MerceRow): MerceLegacy {
     aliquotaIvaCent: row.aliquota_iva,
     operazione: row.operazione,
     natura: row.natura,
+    codiceEan: row.codice_EAN,
   };
 }
 
 const SELECT_MERCE = `
   SELECT m.codice_fornitore, m.codice_merce, m.descrizione, m.prezzo_di_vendita,
-         m.codice_IVA, a.aliquota_iva, a.operazione, a.natura
+         m.codice_IVA, m.codice_EAN, a.aliquota_iva, a.operazione, a.natura
   FROM merci m
   JOIN aliquotaiva a ON a.codice = m.codice_IVA
 `;
@@ -50,6 +53,22 @@ export async function cercaMerceByEan(pool: LegacyPool, ean: string): Promise<Me
   const [rows] = await pool.query<MerceRow[]>(
     { sql: `${SELECT_MERCE} WHERE m.codice_EAN = ? LIMIT 1`, timeout: LEGACY_QUERY_TIMEOUT_MS },
     [ean],
+  );
+  return rows[0] ? mapMerce(rows[0]) : null;
+}
+
+/** Lookup da QR etichetta fisica: il codice fornitore/merce è la chiave primaria di `merci`. */
+export async function cercaMerceByFornitoreMerce(
+  pool: LegacyPool,
+  fornitore: string,
+  merce: string,
+): Promise<MerceLegacy | null> {
+  const [rows] = await pool.query<MerceRow[]>(
+    {
+      sql: `${SELECT_MERCE} WHERE m.codice_fornitore = ? AND m.codice_merce = ? LIMIT 1`,
+      timeout: LEGACY_QUERY_TIMEOUT_MS,
+    },
+    [fornitore, merce],
   );
   return rows[0] ? mapMerce(rows[0]) : null;
 }

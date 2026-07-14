@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import type { AliquoteCache } from "../legacy/aliquote-cache.js";
 import type { LegacyPool } from "../legacy/client.js";
-import { cercaMerceByEan, cercaMerceByTesto } from "../legacy/queries.js";
+import { cercaMerceByEan, cercaMerceByFornitoreMerce, cercaMerceByTesto } from "../legacy/queries.js";
 import { scorporaIva } from "../legacy/scorporo.js";
 import { validateBody } from "../lib/validation.js";
 import { legacyMerciQuerySchema } from "../validation/legacy.js";
@@ -26,6 +26,19 @@ export async function legacyRoutes(app: FastifyInstance, opts: LegacyRoutesOptio
         const merce = await cercaMerceByEan(legacyPool, query.ean);
         if (!merce) {
           reply.code(404).send({ error: "Nessuna merce trovata per l'EAN indicato" });
+          return;
+        }
+        reply.send({
+          ...merce,
+          prezzoUnitarioCent: scorporaIva(merce.prezzoDiVendita, merce.aliquotaIvaCent),
+        });
+        return;
+      }
+
+      if (query.fornitore && query.merce) {
+        const merce = await cercaMerceByFornitoreMerce(legacyPool, query.fornitore, query.merce);
+        if (!merce) {
+          reply.code(404).send({ error: "Nessuna merce trovata per fornitore/merce indicati" });
           return;
         }
         reply.send({

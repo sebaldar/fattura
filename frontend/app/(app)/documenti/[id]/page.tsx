@@ -317,6 +317,12 @@ function RigaRow({
     <li className="flex items-center justify-between gap-4 py-3 text-sm">
       <div className="flex-1">
         <div className="font-medium">{riga.descrizione}</div>
+        {(riga.codiceFornitore || riga.codiceMerce || riga.codiceEan) && (
+          <div className="text-xs text-black/50 dark:text-white/50">
+            {[riga.codiceFornitore, riga.codiceMerce].filter(Boolean).join(" / ")}
+            {riga.codiceEan ? ` · EAN ${riga.codiceEan}` : ""}
+          </div>
+        )}
         <div className="text-black/60 dark:text-white/60">
           {riga.quantita} × {formatCent(riga.prezzoUnitarioCent)} · {(riga.aliquotaIvaCent / 100).toFixed(2)}%
           {" · "}

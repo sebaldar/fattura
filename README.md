@@ -45,7 +45,7 @@ Crea (se non esiste già) l'utente con le credenziali `ADMIN_EMAIL`/`ADMIN_PASSW
 | `BACKEND_INTERNAL_URL` | URL interno del backend usato dal proxy `/api/*` del frontend (di norma non va cambiato) |
 | `NEXT_PUBLIC_APP_URL` | URL pubblico dell'app dietro il reverse proxy |
 
-Se il MariaDB legacy è irraggiungibile o le credenziali non sono corrette, le funzionalità che ne dipendono (lookup EAN, elenco aliquote) degradano a inserimento manuale con risposta `503 {degraded:true}`: l'app non si blocca mai.
+Se il MariaDB legacy è irraggiungibile o le credenziali non sono corrette, le funzionalità che ne dipendono (lookup EAN/QR, elenco aliquote) degradano a inserimento manuale con risposta `503 {degraded:true}`: l'app non si blocca mai.
 
 ## Creazione utenti
 

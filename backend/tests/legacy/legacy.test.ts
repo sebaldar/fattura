@@ -5,7 +5,12 @@ import { buildApp } from "../../src/app.js";
 import { loadEnv } from "../../src/config/env.js";
 import { createAliquoteCache } from "../../src/legacy/aliquote-cache.js";
 import { createLegacyPool } from "../../src/legacy/client.js";
-import { cercaMerceByEan, cercaMerceByTesto, elencoAliquote } from "../../src/legacy/queries.js";
+import {
+  cercaMerceByEan,
+  cercaMerceByFornitoreMerce,
+  cercaMerceByTesto,
+  elencoAliquote,
+} from "../../src/legacy/queries.js";
 import { client, db } from "../db/setup.js";
 import { loginAsNewUser } from "../support/auth.js";
 
@@ -32,6 +37,21 @@ describe("integrazione legacy MariaDB", () => {
 
     it("cercaMerceByEan torna null se non trovata", async () => {
       const merce = await cercaMerceByEan(legacyPool, "0000000000000");
+      expect(merce).toBeNull();
+    });
+
+    it("cercaMerceByFornitoreMerce trova la merce dal codice QR", async () => {
+      const merce = await cercaMerceByFornitoreMerce(legacyPool, "FORN01", "ART001");
+      expect(merce).toMatchObject({
+        descrizione: "Prodotto aliquota 22%",
+        prezzoDiVendita: 1220,
+        aliquotaIvaCent: 2200,
+        codiceEan: "8001234567890",
+      });
+    });
+
+    it("cercaMerceByFornitoreMerce torna null se non trovata", async () => {
+      const merce = await cercaMerceByFornitoreMerce(legacyPool, "FORN01", "INESISTENTE");
       expect(merce).toBeNull();
     });
 
@@ -94,6 +114,25 @@ describe("integrazione legacy MariaDB", () => {
 
     it("GET /api/legacy/merci?ean= sconosciuto risponde 404", async () => {
       const res = await app.inject({ method: "GET", url: "/api/legacy/merci?ean=0000000000000", cookies });
+      expect(res.statusCode).toBe(404);
+    });
+
+    it("GET /api/legacy/merci?fornitore=&merce= restituisce la merce con prezzo scorporato", async () => {
+      const res = await app.inject({
+        method: "GET",
+        url: "/api/legacy/merci?fornitore=FORN01&merce=ART001",
+        cookies,
+      });
+      expect(res.statusCode).toBe(200);
+      expect(res.json()).toMatchObject({ codiceEan: "8001234567890", prezzoUnitarioCent: 1000 });
+    });
+
+    it("GET /api/legacy/merci?fornitore=&merce= sconosciuto risponde 404", async () => {
+      const res = await app.inject({
+        method: "GET",
+        url: "/api/legacy/merci?fornitore=FORN01&merce=INESISTENTE",
+        cookies,
+      });
       expect(res.statusCode).toBe(404);
     });
 

@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import { ApiError } from "../lib/api";
 import type { Riga, RigaInput } from "../lib/documenti";
 import type { AliquotaLegacy } from "../lib/legacy";
-import { cercaMerceByEan, listaAliquote } from "../lib/legacy";
+import { cercaMerceByEan, cercaMerceByFornitoreMerce, listaAliquote } from "../lib/legacy";
+import { classifyDecodedText } from "../lib/scanner";
 import { BarcodeScanner } from "./BarcodeScanner";
 
 interface FormRiga {
@@ -71,22 +72,35 @@ export function RigaEditor({ initial, submitLabel, onSalva, onAnnulla }: RigaEdi
     setForm((prev) => ({ ...prev, [name]: value }));
   }
 
+  function precompilaDaListino(merce: {
+    codiceFornitore: string;
+    codiceMerce: string;
+    codiceEan: string | null;
+    descrizione: string;
+    codiceIva: string;
+    aliquotaIvaCent: number;
+    natura: string | null;
+    prezzoUnitarioCent: number;
+  }) {
+    setForm((prev) => ({
+      ...prev,
+      codiceFornitore: merce.codiceFornitore,
+      codiceMerce: merce.codiceMerce,
+      codiceEan: merce.codiceEan ?? prev.codiceEan,
+      descrizione: merce.descrizione,
+      codiceIva: merce.codiceIva.trim(),
+      aliquotaIvaCent: String(merce.aliquotaIvaCent),
+      natura: merce.natura ?? "",
+      prezzoUnitarioEuro: (merce.prezzoUnitarioCent / 100).toFixed(2),
+    }));
+    setMessaggioLookup("Riga precompilata dal listino: verifica i dati prima di confermare.");
+  }
+
   async function cercaEan(ean: string) {
     setMessaggioLookup("Ricerca nel listino in corso…");
     try {
       const merce = await cercaMerceByEan(ean);
-      setForm((prev) => ({
-        ...prev,
-        codiceFornitore: merce.codiceFornitore,
-        codiceMerce: merce.codiceMerce,
-        codiceEan: ean,
-        descrizione: merce.descrizione,
-        codiceIva: merce.codiceIva.trim(),
-        aliquotaIvaCent: String(merce.aliquotaIvaCent),
-        natura: merce.natura ?? "",
-        prezzoUnitarioEuro: (merce.prezzoUnitarioCent / 100).toFixed(2),
-      }));
-      setMessaggioLookup("Riga precompilata dal listino: verifica i dati prima di confermare.");
+      precompilaDaListino({ ...merce, codiceEan: merce.codiceEan ?? ean });
     } catch (err) {
       setForm((prev) => ({ ...prev, codiceEan: ean }));
       if (err instanceof ApiError && err.status === 404) {
@@ -94,6 +108,35 @@ export function RigaEditor({ initial, submitLabel, onSalva, onAnnulla }: RigaEdi
       } else {
         setMessaggioLookup("Listino non raggiungibile: inserisci i dati manualmente.");
       }
+    }
+  }
+
+  async function cercaFornitoreMerce(fornitore: string, merce: string) {
+    setMessaggioLookup("Ricerca nel listino in corso…");
+    try {
+      const trovata = await cercaMerceByFornitoreMerce(fornitore, merce);
+      precompilaDaListino(trovata);
+    } catch (err) {
+      setForm((prev) => ({ ...prev, codiceFornitore: fornitore, codiceMerce: merce }));
+      if (err instanceof ApiError && err.status === 404) {
+        setMessaggioLookup("Codice fornitore/merce non trovato nel listino: inserisci i dati manualmente.");
+      } else {
+        setMessaggioLookup("Listino non raggiungibile: inserisci i dati manualmente.");
+      }
+    }
+  }
+
+  function handleScansione(testoDecodificato: string) {
+    setScannerAttivo(false);
+    const classificato = classifyDecodedText(testoDecodificato);
+    if (!classificato) {
+      setMessaggioLookup("Codice non riconosciuto: inserisci i dati manualmente.");
+      return;
+    }
+    if (classificato.type === "ean") {
+      void cercaEan(classificato.code);
+    } else {
+      void cercaFornitoreMerce(classificato.fornitore, classificato.merce);
     }
   }
 
@@ -153,40 +196,60 @@ export function RigaEditor({ initial, submitLabel, onSalva, onAnnulla }: RigaEdi
 
   return (
     <div className="space-y-3 rounded border border-black/10 p-3 dark:border-white/10">
-      {!initial && (
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setScannerAttivo((v) => !v)}
-            className="rounded border border-black/20 px-3 py-1 text-sm dark:border-white/20"
-          >
-            {scannerAttivo ? "Chiudi scanner" : "Scansiona EAN"}
-          </button>
-          <input
-            placeholder="oppure inserisci EAN manualmente"
-            className="flex-1 rounded border border-black/20 px-2 py-1 text-sm dark:border-white/20 dark:bg-transparent"
-            value={form.codiceEan}
-            onChange={(e) => handle("codiceEan", e.target.value)}
-            onBlur={(e) => {
-              if (e.target.value.trim()) void cercaEan(e.target.value.trim());
-            }}
-          />
-        </div>
-      )}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setScannerAttivo((v) => !v)}
+          className="rounded border border-black/20 px-3 py-1 text-sm dark:border-white/20"
+        >
+          {scannerAttivo ? "Chiudi scanner" : "Scansiona codice (EAN o QR)"}
+        </button>
+      </div>
 
-      {scannerAttivo && (
-        <BarcodeScanner
-          onDetected={(codice) => {
-            setScannerAttivo(false);
-            void cercaEan(codice);
-          }}
-          onClose={() => setScannerAttivo(false)}
-        />
-      )}
+      {scannerAttivo && <BarcodeScanner onDetected={handleScansione} onClose={() => setScannerAttivo(false)} />}
 
       {messaggioLookup && <p className="text-sm text-black/70 dark:text-white/70">{messaggioLookup}</p>}
 
       <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-sm font-medium" htmlFor="riga-codice-fornitore">
+            Codice fornitore
+          </label>
+          <input
+            id="riga-codice-fornitore"
+            value={form.codiceFornitore}
+            onChange={(e) => handle("codiceFornitore", e.target.value)}
+            className="mt-1 w-full rounded border border-black/20 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium" htmlFor="riga-codice-merce">
+            Codice merce
+          </label>
+          <input
+            id="riga-codice-merce"
+            value={form.codiceMerce}
+            onChange={(e) => handle("codiceMerce", e.target.value)}
+            className="mt-1 w-full rounded border border-black/20 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+          />
+        </div>
+        <div className="col-span-2">
+          <label className="block text-sm font-medium" htmlFor="riga-codice-ean">
+            Codice EAN
+          </label>
+          <input
+            id="riga-codice-ean"
+            placeholder="Scansiona o inserisci manualmente"
+            value={form.codiceEan}
+            onChange={(e) => handle("codiceEan", e.target.value)}
+            onBlur={(e) => {
+              const valore = e.target.value.trim();
+              if (valore) void cercaEan(valore);
+            }}
+            className="mt-1 w-full rounded border border-black/20 px-3 py-2 dark:border-white/20 dark:bg-transparent"
+          />
+        </div>
+
         <div className="col-span-2">
           <label className="block text-sm font-medium" htmlFor="riga-descrizione">
             Descrizione *
