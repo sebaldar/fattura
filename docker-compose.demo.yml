@@ -1,0 +1,75 @@
+# Stack demo pubblica, isolato dalla produzione: rete, volumi e progetto
+# Docker Compose distinti (name: esplicito, altrimenti erediterebbe lo
+# stesso project name di docker-compose.yml essendo nella stessa cartella).
+# Nessun dato reale: MariaDB "legacy" qui è un catalogo fittizio caricato
+# da demo/mariadb-legacy/init.sql, Postgres parte vuoto e viene popolato
+# dal seed demo (db:seed-demo).
+#
+# Uso:
+#   docker compose -f docker-compose.demo.yml --env-file .env.demo up -d --build
+#   docker compose -f docker-compose.demo.yml exec backend node dist/db/seed-demo.js
+
+name: fattura-demo
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    volumes:
+      - pgdata_demo:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    # nessuna porta esposta verso l'host
+
+  mariadb-legacy:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MARIADB_DEMO_ROOT_PASSWORD}
+      MARIADB_DATABASE: ${LEGACY_DB_DATABASE}
+      MARIADB_USER: ${LEGACY_DB_USER}
+      MARIADB_PASSWORD: ${LEGACY_DB_PASSWORD}
+    volumes:
+      - ./demo/mariadb-legacy/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - mariadb_demo_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+    # nessuna porta esposta verso l'host
+
+  backend:
+    build: ./backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mariadb-legacy:
+        condition: service_healthy
+    env_file: .env.demo
+    environment:
+      PORT: 3005
+      LEGACY_DB_HOST: mariadb-legacy
+      LEGACY_DB_PORT: 3306
+    restart: unless-stopped
+    # nessuna porta esposta verso l'host
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    env_file: .env.demo
+    ports:
+      - "3006:3000"
+    restart: unless-stopped
+
+volumes:
+  pgdata_demo:
+  mariadb_demo_data:

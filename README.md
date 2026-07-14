@@ -57,7 +57,20 @@ docker compose exec -e ADMIN_EMAIL=nuovo@esempio.it -e ADMIN_PASSWORD='password-
 
 ## Reverse proxy
 
-L'app è pensata per stare dietro un reverse proxy con **un solo upstream pubblico**: la porta `3004` del servizio `frontend` (che internamente instrada `/api/*` verso il backend). Il proxy deve inoltrare gli header `X-Forwarded-Proto`, `X-Forwarded-Host` e `X-Forwarded-For` perché cookie `Secure`/`SameSite` e URL assoluti generati dall'app siano coerenti. Non esporre mai direttamente le porte di `backend` o `postgres`.
+L'app è pensata per stare dietro un reverse proxy con **un solo upstream pubblico**: la porta `3004` del servizio `frontend` (che internamente instrada `/api/*` verso il backend). Il proxy deve inoltrare gli header `X-Forwarded-Proto`, `X-Forwarded-Host` e `X-Forwarded-For` perché cookie `Secure`/`SameSite` e URL assoluti generati dall'app siano coerenti. Non esporre mai direttamente le porte di `backend` o `postgres`. Config di riferimento in [`docs/nginx-reverse-proxy.conf`](docs/nginx-reverse-proxy.conf).
+
+## Ambiente demo
+
+`docker-compose.demo.yml` avvia uno stack completamente separato (rete, volumi Postgres/MariaDB, porta `3006` invece di `3004`) con **nessun dato reale**: il "legacy" è un catalogo fittizio caricato da [`demo/mariadb-legacy/init.sql`](demo/mariadb-legacy/init.sql), Postgres viene popolato da uno script di seed dedicato con clienti e fatture di esempio già emesse.
+
+```bash
+cp .env.demo.example .env.demo
+# compila .env.demo con segreti DIVERSI da quelli di produzione
+docker compose -f docker-compose.demo.yml --env-file .env.demo up -d --build
+docker compose -f docker-compose.demo.yml --env-file .env.demo exec backend node dist/db/seed-demo.js
+```
+
+Config del reverse proxy per il sottodominio demo in [`docs/nginx-demo-reverse-proxy.conf`](docs/nginx-demo-reverse-proxy.conf).
 
 ## Comandi
 
