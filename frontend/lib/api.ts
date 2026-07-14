@@ -10,9 +10,13 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  // Niente Content-Type quando non c'è body (es. DELETE): con l'header
+  // impostato ma corpo vuoto, il parser JSON di Fastify risponde 400
+  // "Body cannot be empty when content-type is set to 'application/json'".
+  const headers: Record<string, string> = options.body !== undefined ? { "Content-Type": "application/json" } : {};
   const res = await fetch(path, {
     ...options,
-    headers: { "Content-Type": "application/json", ...(options.headers ?? {}) },
+    headers: { ...headers, ...(options.headers ?? {}) },
   });
 
   if (res.status === 204) {
